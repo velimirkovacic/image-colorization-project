@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import data
-from d2l import torch as d2l
 import matplotlib.pyplot as plt
 from models import init_weights
 
@@ -20,7 +19,7 @@ class LitModel():
         self.lambda_recon = lambda_recon
         self.generator = self.generator.to(self.device)
         self.discriminator = self.discriminator.to(self.device)
-        self.accumulator = d2l.Accumulator(2)
+        self.accumulator = Accumulator(2)
         
     def set_requires_grad(self, model, requires_grad=True):
         for param in model.parameters():
@@ -83,3 +82,10 @@ class LitModel():
         print(self.generator.load_state_dict(torch.load(path)))
         if discriminator_path:
             print(self.discriminator.load_state_dict(torch.load(discriminator_path)))
+
+class Accumulator():
+    def __init__(self, n):
+        self.data = [0.0] * n
+
+    def add(self, *args):
+        self.data.extend(args)
