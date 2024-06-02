@@ -1,0 +1,162 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage[caption=false]{subfig}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage[utf8]{inputenx}
+\usepackage[croatian]{babel}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+		T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Bojenje crno-bijelih slika}
+
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Luka Mucko}
+		\IEEEauthorblockA{\textit{FER}}
+		\and
+		\IEEEauthorblockN{2\textsuperscript{nd} Filip Pankretić}
+		\IEEEauthorblockA{\textit{FER}}
+		\and
+		\IEEEauthorblockN{3\textsuperscript{rd} Dominik Jambrović}
+		\IEEEauthorblockA{\textit{FER}}
+		\and
+		\IEEEauthorblockN{4\textsuperscript{th} Velimir Kovačić}
+		\IEEEauthorblockA{\textit{FER}}
+		\and
+		\IEEEauthorblockN{5\textsuperscript{th} Filip Perković}
+		\IEEEauthorblockA{\textit{FER}}
+		\and
+		\IEEEauthorblockN{6\textsuperscript{th} Luka Glavinić}
+		\IEEEauthorblockA{\textit{FER}}}
+	
+
+\maketitle
+
+%\begin{abstract}
+%Sažetak upisati ovdje
+%\end{abstract}
+
+%\begin{IEEEkeywords}
+%kljucne, rijeci, upisati, ovdje
+%\end{IEEEkeywords}
+
+\section{Uvod}
+% 1. Uvod/Motivacija
+\input{uvod}
+
+\section{Pregled postojećih pristupa}
+% 2. Pregled postojećih pristupa
+\input{ppp}
+
+\section{Opis skupa podataka}
+% 3. Skup podataka
+
+U ovome radu koristili smo skup podataka COCO 2017.
+COCO (Common Objects in Context) 2017 skup je podataka koji je široko korišten u području računalnog vida. Dizajniran je s ciljem omogućavanja unapređenja razvoja algoritama za prepoznavanje objekata, segmentaciju, detekciju i opisivanje slika.
+
+COCO 2017 sadrži više od 200 000 primjera. U našem radu, za učenje smo koristili 118 287 primjera, dok je za testiranje korišteno 40 670 primjera.
+Slike iz skupa podataka prikupljene su iz različitih scenarija svakodnevnog života - cilj je prikazivanje objekata u njihovoj prirodnoj okolini tj. kontekstu.
+Skup podataka sadrži oznake za 80 različitih razreda objekata, uključujući ljude, životinje, vozila, kućanske predmete i brojne druge.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{imgs/coco_primjeri.png}
+    \caption{Primjer slika iz skupa COCO 2017. Preuzeto iz\cite{bourouis2021color}.}
+    \label{fig:slike_COCO}
+\end{figure}
+
+COCO 2017 ne koristi se samo za klasifikaciju pa stoga sadrži i neke pomoćne oznake.
+Među njima su oznake granica objekata tj. okviri (engl. \textit{bounding boxes}), kao i
+precizne maske segmentacije za svaki objekt - ovo omogućava učenje modela za segmentaciju.
+Dodatno, skup podataka sadrži i oznake ključnih točaka za ljudsko tijelo, uključujući oznake ramena, laktova te koljena.
+Svaka slika ima više tekstualnih opisa, što je korisno za zadatak opisivanja slika, kao i učenje jezičnih modela vezanih uz slike.
+
+\section{Arhitektura cGAN}
+% 4. GAN -> cGAN
+
+Generativne suparničke mreže\cite{goodfellow2020generative} razvio je istraživački tim pod vodstvom Iana Goodfellowa 2014. godine. Ova arhitektura sastoji se od dvije mreže koje rade jedna protiv druge (suparnički). Mreža generator na temelju nasumičnog vektora (najčešće uzorkovanog iz normalne razdiobe) treba generirati sliku koja bi idealno odgovarala distribuciji stvarnih podataka. S druge strane, diskriminator za slike na ulazu treba identificirati radi li se o stvarnoj ili umjetnoj (generiranoj) slici. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{imgs/gan.png}
+    \caption{Arhitektura GAN. Preuzeto iz\cite{hayes2017logan}.}
+    \label{fig:arhitektura_gan}
+\end{figure}
+
+Tijekom učenja, diskriminator želi maksimizirati svoju pouzdanost klasifikacije - idealno, diskriminator bi za stvarne slike na izlazu dao vrijednost 1, dok bi za umjetne slike dao vrijednost 0. Istovremeno, generator želi generirati slike za koje će diskriminator što pouzdanije reći da su stvarne. Vidimo da je ovo igra s nultim zbrojem (engl. \textit{zero-sum game}).
+
+Za generator smo koristili arhitekturu zvanu U-Net\cite{ronneberger2015unet}.
+U-Net je konvolucijska neuronska mreža koja je prvobitno razvijena za zadatke segmentacije medicinskih slika, ali se s vremenom pokazala vrlo učinkovitom i u različitim drugim zadacima računalnog vida, uključujući segmentaciju, translaciju sa slike na sliku i bojanje slika.
+Arhitektura se sastoji od dva glavna dijela: kodera (downsampling path) i dekodera (upsampling path), koje zajedno formiraju oblik slova "U". Koder i dekoder oblikovali smo kao zasebne blokove u našem konačnom modelu.
+
+Dodatno, arhitektura U-Net uključuje preskočne veze (engl. \textit{skip connections}) između odgovarajućih slojeva kodera i dekodera. One omogućuju prijenos niskorazinskih značajki, čime se poboljšava točnost i preciznost rekonstrukcije slike.
+Preskočne veze ostvaruju se konkateniranjem značajki iz odgovarajućeg sloja kodera sa značajkama iz odgovarajućeg sloja dekodera.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{imgs/unet.png}
+    \caption{Arhitektura U-Net. Preuzeto iz\cite{raudonis2021fast}.}
+    \label{fig:arhitektura_unet}
+\end{figure}
+
+Koder se sastoji od niza konvolucijskih blokova. Svaki od tih blokova sadrži dva konvolucijska sloja s aktivacijom ReLU, kao i sloj sažimanja maksimumom (engl. \textit{max-pooling}) za smanjenje dimenzija i povećanje receptivnog polja.
+Svaki blok smanjuje prostorne dimenzije i povećava broj kanala, što omogućuje modelu da uči sve složenije značajke.
+
+Dekoder se također sastoji od niza konvolucijskih blokova. Ipak, kako bi postigli povećanje prostornih dimenzija, u dekoderskim blokovima koristi se transponirana konvolucija. Dodatno, koriste se i slojevi normalizacije po grupi (engl. \textit{batch normalization}). Kao aktivacijska funkcija, u dekoderu se koristi propusna zglobnica (engl. \textit{Leaky ReLU}). Osim transponirane konvolucije, za povećanje prostornih dimenzija se može koristiti i interpolacija - npr. bilinearna interpolacija. Svaki blok povećava prostorne dimenzije i smanjuje broj kanala, obnavljajući detalje slike.
+
+Uvjetne generativne suparničke mreže (engl. \textit{Conditional Generative Adversarial Networks} - cGAN) napredna su varijanta GAN-ova koja uvodi dodatne informacije u proces generiranja, ali i klasificiranja podataka. Ove mreže omogućuju generiranje uzoraka uvjetovanih određenim unosom, kao što su slike, oznake razreda, tekstualni opisi ili druge vrste podataka. cGAN-ovi su vrlo korisni za zadatke gdje postoji potreba za kontroliranim generiranjem primjeraka poput bojanja slika, translacije sa slike na sliku i generiranja slika prema tekstualnim opisima. U našem radu, kao uvjetni vektor na ulaz generatora dovodimo crno-bijelu (engl. \textit{grayscale}) sliku.
+
+\section{Mjere dobrote}
+% 5. Opis metrika
+
+Kada govorimo o evaluaciji performansi generativnih modela, postoje dva pristupa.
+Prvi od pristupa je vizualna procjena kvalitete - generirane slike ocjenjuju ljudi.
+Pošto je ovaj pristup veoma subjektivan, uvedene su brojne mjere dobrote tj. kvantitativne metrike.
+Ako je u pitanju zadatak poput bojanja slika gdje imamo očekivani izlaz, mogu se koristiti mjere poput srednje kvadratne pogreške (engl. \textit{Mean Squared Error - MSE}) i mjere indeksa strukturalne sličnosti (engl. \textit{Structural Similarity Index Measure} - SSIM). 
+U našem radu koristili smo mjere IS (engl. \textit{Inception Score}) i FID (engl. \texit{Fréchet Inception Distance}).
+
+IS\cite{salimans2016improved} je mjera dobrote koja se koristi za procjenu kvalitete slika generiranih generativnim modelima, posebno GAN-ovima. Mjera koristi prednaučenu mrežu Inception v3\cite{szegedy2015going} za izračunavanje rezultata, a fokus mjere su dva ključna aspekta generiranih slika: kvaliteta i raznolikost.
+Konkretno, kvaliteta generiranih slika manifestira se visokom pouzdanošću klasifikacije mreže Inception v3 za pojedine slike. Drugim riječima, za svaku generiranu sliku, model bi na izlazu trebao dati distribuciju vjerojatnosti koja je fokusirana na jedan razred. Oba aspekta možemo kvantificirati koristeći KL-divergenciju izračunatu između distribucija vjerojatnosti za pojedine slike te distribucije marginaliziranih vjerojatnosti za sve razrede.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{imgs/IS_formula.png}
+    \caption{Formula za izračun IS-a.}
+    \label{fig:is_formula}
+\end{figure}
+
+FID\cite{heusel2017gans} je mjera dobrote koja se također koristi za procjenu kvalitete generiranih slika. Kroz godine, ova mjera postala je standard u evaluaciji generativnih modela, posebno GAN-ova. FID mjeri sličnost između distribucija stvarnih i generiranih slika. Konkretno, za izračun mjere FID koristi se Fréchetova udaljenost između dvije multivarijatne normalne distribucije. Pritom distribucije modeliraju značajke iz posljednjeg sloja mreže Inception v3 - jedna distribucija modelira značajke za stvarne slike, dok druga distribucija modelira značajke za generirane slike.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{imgs/FID_formula.png}
+    \caption{Formula za izračun FID-a.}
+    \label{fig:fid_formula}
+\end{figure}
+
+\section{Eksperimentalni rezultati}
+% 6. Experimentalni rezultati i metrike
+\input{rezultati}
+
+\section{Usporedba s postojećim pristupima}
+% 7. Usporedba s postojećim pristupima
+\input{usporedba}
+
+\section{Zaključak}
+% 7. Zaključak
+\input{zakljucak}
+
+	\bibliography{literatura}
+	\bibliographystyle{ieeetr}
+        \nocite{*}
+\end{document}

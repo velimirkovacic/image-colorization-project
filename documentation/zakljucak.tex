@@ -1,0 +1,6 @@
+
+Razvijen je relativno jednostavan model, koji se može naučiti na osobnim računalima s grafičkim karticama. Bojenje je donekle uspješno, kao što se moglo vidjeti na slikama \ref{fig:slike_skup} i \ref{fig:slike_vlastite}. Naučeni model vrlo dobro boji nijanse zelene i smeđe, kao i ljudsku kožu, ali ima problema sa šarenim površinama. Ova svojstva vezana su uz korišteni skup podataka za učenje.
+
+Koristeći mjere dobrote FID i IS, vidljivo je da je model usporediv, ako ne i bolji, od sličnih modela za bojenje crno-bijelih slika. Prema mjeri dobrote FID, model je bolji od modela WGAN\cite{pix2pixwgan} i ParGN\cite{kumar2022paracolorizer}, a malo lošiji od modela InstColor\cite{Su_2020_CVPR} koji izlučuje značajke slika prije bojenja. Prema mjeri dobrote IS, model je bolji od modela WGAN\cite{pix2pixwgan}.
+
+Za daljnja istraživanja, može se koristiti više procesorske snage grafičkog procesora (GPU snage) kako bi se model učio veći broj epoha. Povećanje skupa podataka također bi poboljšalo model - na primjer, model bi se mogao učiti na skupu podataka ImageNet\cite{deng2009imagenet}. Dodatno, mogu se isprobati modifikacije arhitekture, kao korištenje WGAN-a umjesto cGAN-a. Uz ovo, mogu se isprobati i potpuno drugačije arhitekture poput difuzijskih modela\cite{sohl2015deep}.
