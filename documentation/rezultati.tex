@@ -2,7 +2,7 @@
 Slike za učenje modela na početku smo pretvorili u CIELAB prostor boja. Generator za zadanu crno-bijelu sliku (L komponentu originalne obojene slike) treba generirati komponente A i B.
 Na temelju generiranih A i B komponenti, stvara se obojena slika u CIELAB prostoru boja koja se prosljeđuje diskriminatoru.
 
-Model smo učili 200 epoha. Za gubitak diskriminatora koristili gubitak unakrsne entropije, a za gubitak generatora koristili smo gubitak diskriminatora, kao i rekonstrukcijski gubitak (L1 udaljenost između umjetne i stvarne slike). Kao optimizator smo za obje mreže koristili optimizator Adam s početnom stopom učenja $2 \cdot 10^{-4}$ .
+Model smo učili 200 epoha. Za gubitak diskriminatora koristili gubitak unakrsne entropije, a za gubitak generatora koristili smo gubitak diskriminatora, kao i rekonstrukcijski gubitak (L1 udaljenost između umjetne i stvarne slike). Kao optimizator smo za obje mreže koristili optimizator Adam s početnom stopom učenja $2 \cdot 10^{-4}$, $\beta_1$ iznosa $0.5$ te $\beta_2$ iznosa $0.999$.
 Nakon učenja modela, generator smo koristili za bojenje crno-bijelih slika. 
 
 Usporedno su prikazane: crno-bijela slika,  slika obojena modelom cGAN i konačno stvarna slika u boji. Na slici \ref{fig:slike_skup} prikazan je izbor od nasumičnih 8 slika iz skupa COCO 2017 koje je model vidio pri učenju. Osim ovoga, prikazan je i izbor od 8 nasumičnih slika iz privatnih galerija ili s interneta koje model nije vidio pri učenju, na slici \ref{fig:slike_vlastite}.
